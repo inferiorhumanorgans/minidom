@@ -67,6 +67,28 @@ impl<T: IntoAttributeValue> IntoAttributeValue for Option<T> {
     }
 }
 
+impl<'a> IntoAttributeValue for f32 {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl<'a> IntoAttributeValue for f64 {
+    fn into_attribute_value(self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+}
+
+impl<T> IntoAttributeValue for &[T]
+where T: IntoAttributeValue + Copy {
+    fn into_attribute_value(self) -> Option<String> {
+        let attributes : Vec<String> = self.into_iter().map(|a| a.into_attribute_value().unwrap()).collect();
+        Some(attributes.join(" "))
+    }
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use super::IntoAttributeValue;
