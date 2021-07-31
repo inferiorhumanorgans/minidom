@@ -255,19 +255,21 @@ impl Element {
     }
 
     /// Modifies the value of an attribute.
-    pub fn set_attr<S: Into<String>, V: IntoAttributeValue>(&mut self, name: S, val: V) {
+    pub fn set_attr<S: Into<String>, V: IntoAttributeValue>(&mut self, name: S, val: V) -> &mut Element {
         let name = name.into();
         let val = val.into_attribute_value();
 
         if let Some(value) = self.attributes.get_mut(&name) {
             *value = val
                 .expect("removing existing value via set_attr, this is not yet supported (TODO)"); // TODO
-            return;
+            return self;
         }
 
         if let Some(val) = val {
             self.attributes.insert(name, val);
         }
+
+        self
     }
 
     /// Returns whether the element has the given name and namespace.
@@ -687,8 +689,9 @@ impl Element {
     ///
     /// assert_eq!(elem.text(), "text");
     /// ```
-    pub fn append_text_node<S: Into<String>>(&mut self, child: S) {
+    pub fn append_text_node<S: Into<String>>(&mut self, child: S) -> &mut Self {
         self.children.push(Node::Text(child.into()));
+        self
     }
 
     /// Appends a node to an `Element`.
@@ -1025,7 +1028,15 @@ impl ElementBuilder {
     }
 
     /// Appends anything implementing `Into<Node>` into the tree.
-    pub fn append<T: Into<Node>>(mut self, node: T) -> ElementBuilder {
+    /// Returns the node.
+    pub fn append<T: Into<Node>>(&mut self, node: T) -> &mut Element {
+        self.root.append_node(node.into());
+        self.root.children_mut().last().unwrap()
+    }
+
+    /// Appends anything implementing `Into<Node>` into the tree.
+    /// Returns self.
+    pub fn extend<T: Into<Node>>(mut self, node: T) -> Self {
         self.root.append_node(node.into());
         self
     }
